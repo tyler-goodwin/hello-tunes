@@ -1,0 +1,1 @@
+& ".\build\HelloTunes_artefacts\Debug\Hello Tunes.exe"
