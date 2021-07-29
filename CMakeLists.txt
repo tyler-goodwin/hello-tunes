@@ -32,6 +32,8 @@ set_property(TARGET HelloTunes PROPERTY CXX_STANDARD 20)
 
 # juce_generate_juce_header(HelloTunes)
 
+# juce_add_module("JUCE/modules/juce_audio_utils")
+
 # `target_sources` adds source files to a target. We pass the target that needs the sources as the
 # first argument, then a visibility parameter for the sources which should normally be PRIVATE.
 # Finally, we supply a list of source files that will be built into the target. This is a standard
@@ -76,6 +78,7 @@ target_link_libraries(HelloTunes
     PRIVATE
         # GuiAppData            # If we'd created a binary data target, we'd link to it here
         juce::juce_gui_extra
+        juce::juce_audio_utils
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
