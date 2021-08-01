@@ -77,6 +77,8 @@ target_compile_definitions(HelloTunes
 target_link_libraries(HelloTunes
     PRIVATE
         # GuiAppData            # If we'd created a binary data target, we'd link to it here
+        juce::juce_dsp
+        juce::juce_gui_basics
         juce::juce_gui_extra
         juce::juce_audio_utils
     PUBLIC
