@@ -42,7 +42,9 @@ set_property(TARGET HelloTunes PROPERTY CXX_STANDARD 20)
 target_sources(HelloTunes
     PRIVATE
         src/Main.cpp
-        src/MainComponent.cpp)
+        src/MainComponent.cpp
+        src/SynthAudioSource.cpp
+)
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
