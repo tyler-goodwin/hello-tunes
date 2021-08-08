@@ -45,8 +45,11 @@ private:
 
   SynthAudioSource synthAudioSource;
 
-  juce::Slider tailOffSlider;
-  juce::Label tailOffLabel;
+  juce::Slider releaseSlider;
+  juce::Label releaseLabel;
+
+  juce::Slider attackSlider;
+  juce::Label attackLabel;
 
   double currentAmplitude = 0.0, currentSampleRate = 0.0;
 

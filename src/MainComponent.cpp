@@ -38,13 +38,21 @@ MainComponent::MainComponent()
     setMidiInput(0);
   }
 
-  addAndMakeVisible(tailOffSlider);
-  tailOffSlider.setRange(MIN_DECAY, MAX_DECAY);
-  tailOffSlider.addListener(this);
+  addAndMakeVisible(attackSlider);
+  attackSlider.setRange(MIN_DECAY, MAX_DECAY);
+  attackSlider.addListener(this);
 
-  addAndMakeVisible(tailOffLabel);
-  tailOffLabel.setText("Decay", juce::dontSendNotification);
-  tailOffLabel.attachToComponent(&tailOffSlider, true);
+  addAndMakeVisible(attackLabel);
+  attackLabel.setText("Attack", juce::dontSendNotification);
+  attackLabel.attachToComponent(&attackSlider, true);
+
+  addAndMakeVisible(releaseSlider);
+  releaseSlider.setRange(MIN_DECAY, MAX_DECAY);
+  releaseSlider.addListener(this);
+
+  addAndMakeVisible(releaseLabel);
+  releaseLabel.setText("Release", juce::dontSendNotification);
+  releaseLabel.attachToComponent(&releaseSlider, true);
 
   addAndMakeVisible(keyboardComponent);
 
@@ -63,7 +71,11 @@ void MainComponent::resized() {
   auto area = getLocalBounds();
 
   auto sliderLeft = 120;
-  tailOffSlider.setBounds(area.removeFromTop(30)
+  attackSlider.setBounds(area.removeFromTop(30)
+                             .removeFromRight(getWidth() - sliderLeft - 10)
+                             .reduced(8));
+
+  releaseSlider.setBounds(area.removeFromTop(30)
                               .removeFromRight(getWidth() - sliderLeft - 10)
                               .reduced(8));
 
@@ -86,8 +98,10 @@ void MainComponent::getNextAudioBlock(
 }
 
 void MainComponent::sliderValueChanged(juce::Slider *slider) {
-  if (slider == &tailOffSlider) {
-    synthAudioSource.setDecayDuration(tailOffSlider.getValue());
+  if (slider == &releaseSlider) {
+    synthAudioSource.setReleaseDuration(releaseSlider.getValue());
+  } else if (slider == &attackSlider) {
+    synthAudioSource.setAttackDuration(attackSlider.getValue());
   }
 }
 

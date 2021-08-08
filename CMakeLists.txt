@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(HELLO_TUNES VERSION 0.0.1)
 
+include_directories(include)
+
 add_subdirectory(JUCE)
 
 # If your app depends the VST2 SDK, perhaps to host VST2 plugins, CMake needs to be told where
@@ -39,12 +41,21 @@ set_property(TARGET HelloTunes PROPERTY CXX_STANDARD 20)
 # Finally, we supply a list of source files that will be built into the target. This is a standard
 # CMake command.
 
+set(SOURCES
+    src/MainComponent.cpp
+    src/SynthAudioSource.cpp
+    src/Envelope.cpp)
+
 target_sources(HelloTunes
     PRIVATE
         src/Main.cpp
-        src/MainComponent.cpp
-        src/SynthAudioSource.cpp
+        ${SOURCES}
 )
+
+add_executable(TestHelloTunes
+    test/TestMain.cpp
+    test/Envelope.cpp
+    ${SOURCES})
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
@@ -76,14 +87,27 @@ target_compile_definitions(HelloTunes
 # linked automatically. If we'd generated a binary data target above, we would need to link to it
 # here too. This is a standard CMake command.
 
+set(PRIVATE_LIBRARIES
+    juce::juce_dsp
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+    juce::juce_audio_utils
+)
+
+set(PUBLIC_LIBRARIES
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+)
+
 target_link_libraries(HelloTunes
     PRIVATE
-        # GuiAppData            # If we'd created a binary data target, we'd link to it here
-        juce::juce_dsp
-        juce::juce_gui_basics
-        juce::juce_gui_extra
-        juce::juce_audio_utils
+        ${PRIVATE_LIBRARIES}
     PUBLIC
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags)
+        ${PUBLIC_LIBRARIES})
+
+target_link_libraries(TestHelloTunes
+    PRIVATE
+        ${PRIVATE_LIBRARIES}
+    PUBLIC
+        ${PUBLIC_LIBRARIES})

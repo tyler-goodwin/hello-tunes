@@ -9,19 +9,19 @@ void SineWaveVoice::startNote(int midiNoteNumber, float velocity,
                               int /*currentPitchWheelPosition*/) {
   currentAngle = 0.0;
   level = velocity * 0.15;
-  tailOff = 0.0;
 
   auto cyclesPerSecond = juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber);
   auto cyclesPerSample = cyclesPerSecond / getSampleRate();
 
   angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
+  envelope.noteOn();
 }
 
 void SineWaveVoice::stopNote(float /*velocity*/, bool allowTailOff) {
   if (allowTailOff) {
-    if (tailOff == 0.0)
-      tailOff = 1.0;
+    envelope.noteOff();
   } else {
+    envelope.reset();
     clearCurrentNote();
     angleDelta = 0.0;
   }
@@ -32,39 +32,31 @@ void SineWaveVoice::renderNextBlock(juce::AudioSampleBuffer &outputBuffer,
   if (angleDelta == 0.0)
     return;
 
-  if (tailOff > 0.0) {
-    while (--numSamples >= 0) {
-      auto currentSample = (float)(std::sin(currentAngle) * level * tailOff);
+  while (--numSamples >= 0) {
+    auto currentSample =
+        (float)(std::sin(currentAngle) * level * envelope.getNextLevel());
 
-      for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
-        outputBuffer.addSample(i, startSample, currentSample);
+    for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
+      outputBuffer.addSample(i, startSample, currentSample);
 
-      currentAngle += angleDelta;
-      ++startSample;
+    currentAngle += angleDelta;
+    ++startSample;
 
-      // Handle tailOff
-      tailOff *= juce::dsp::FastMathApproximations::exp(-1 / decayLength);
-      if (tailOff <= 0.005) {
-        clearCurrentNote();
-        angleDelta = 0.0;
-        break;
-      }
-    }
-  } else {
-    while (--numSamples >= 0) {
-      auto currentSample = (float)(std::sin(currentAngle) * level);
-
-      for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
-        outputBuffer.addSample(i, startSample, currentSample);
-
-      currentAngle += angleDelta;
-      ++startSample;
+    if (envelope.isNoteFinished()) {
+      envelope.reset();
+      clearCurrentNote();
+      angleDelta = 0.0;
+      break;
     }
   }
 }
 
-void SineWaveVoice::setDecayLength(double newLength) {
-  decayLength = newLength * 10000;
+void SineWaveVoice::setAttack(double value) {
+  envelope.setAttack(value * 10000);
+}
+
+void SineWaveVoice::setRelease(double value) {
+  envelope.setRelease(value * 10000);
 }
 
 SynthAudioSource::SynthAudioSource(juce::MidiKeyboardState &keyState)
@@ -104,9 +96,16 @@ juce::MidiMessageCollector *SynthAudioSource::getMidiCollector() {
   return &midiCollector;
 }
 
-void SynthAudioSource::setDecayDuration(float newLength) {
+void SynthAudioSource::setAttackDuration(double value) {
   for (auto i = 0; i < NUM_VOICES; ++i) {
     auto voice = static_cast<SineWaveVoice *>(synth.getVoice(i));
-    voice->setDecayLength(newLength);
+    voice->setAttack(value);
+  }
+}
+
+void SynthAudioSource::setReleaseDuration(double value) {
+  for (auto i = 0; i < NUM_VOICES; ++i) {
+    auto voice = static_cast<SineWaveVoice *>(synth.getVoice(i));
+    voice->setRelease(value);
   }
 }

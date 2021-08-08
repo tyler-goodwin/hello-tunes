@@ -2,10 +2,11 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
-#include <juce_dsp/juce_dsp.h>
+
+#include "Envelope.h"
 
 constexpr int NUM_VOICES = 8;
-constexpr double MIN_DECAY = 0.25;
+constexpr double MIN_DECAY = 0.01;
 constexpr double MAX_DECAY = 5.0;
 
 struct SineWaveSound : public juce::SynthesiserSound {
@@ -17,7 +18,10 @@ struct SineWaveSound : public juce::SynthesiserSound {
 
 struct SineWaveVoice : public juce::SynthesiserVoice {
 
-  SineWaveVoice() {}
+  SineWaveVoice() {
+    setAttack(MIN_DECAY);
+    setRelease(MIN_DECAY);
+  }
 
   bool canPlaySound(juce::SynthesiserSound *sound) override;
 
@@ -33,11 +37,13 @@ struct SineWaveVoice : public juce::SynthesiserVoice {
   void renderNextBlock(juce::AudioSampleBuffer &outputBuffer, int startSample,
                        int numSamples) override;
 
-  void setDecayLength(double newLength);
+  void setAttack(double value);
+  void setRelease(double value);
 
 private:
-  double currentAngle = 0.0, angleDelta = 0.0, level = 0.0, tailOff = 0.0,
-         decayLength = 0.5;
+  double currentAngle = 0.0, angleDelta = 0.0, level = 0.0;
+
+  Envelope envelope;
 };
 
 class SynthAudioSource : public juce::AudioSource {
@@ -56,7 +62,8 @@ public:
 
   juce::MidiMessageCollector *getMidiCollector();
 
-  void setDecayDuration(float);
+  void setAttackDuration(double value);
+  void setReleaseDuration(double value);
 
 private:
   juce::MidiMessageCollector midiCollector;
