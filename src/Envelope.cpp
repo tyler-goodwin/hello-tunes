@@ -1,5 +1,12 @@
 #include "Envelope.h"
 
+Envelope::Envelope() {
+  adjustedAttack = calculateAdjustedRate(attack);
+  adjustedRelease = calculateAdjustedRate(release);
+}
+
+void Envelope::setSampleRate(uint32_t value) { sampleRate = value; }
+
 void Envelope::noteOn() {
   state = State::ATTACK;
   attackAccumulator = 1.0;
@@ -28,9 +35,15 @@ double Envelope::getNextLevel() {
   return level;
 }
 
-void Envelope::setAttack(double value) { attack = value; }
+void Envelope::setAttack(double value) {
+  attack = value;
+  adjustedAttack = calculateAdjustedRate(value);
+}
 
-void Envelope::setRelease(double value) { release = value; }
+void Envelope::setRelease(double value) {
+  release = value;
+  adjustedRelease = calculateAdjustedRate(value);
+}
 
 bool Envelope::isNoteFinished() {
   return state == State::RELEASE && level <= 0.005;
@@ -39,7 +52,7 @@ bool Envelope::isNoteFinished() {
 Envelope::State Envelope::getCurrentState() { return state; }
 
 void Envelope::handleAttack() {
-  attackAccumulator *= juce::dsp::FastMathApproximations::exp(-1 / attack);
+  attackAccumulator *= adjustedAttack;
 
   level = 1 - attackAccumulator;
 
@@ -49,6 +62,28 @@ void Envelope::handleAttack() {
   }
 }
 
-void Envelope::handleRelease() {
-  level *= juce::dsp::FastMathApproximations::exp(-1 / release);
+void Envelope::handleRelease() { level *= adjustedRelease; }
+
+double Envelope::calculateAdjustedRate(double rate) {
+  /**
+   * To make exponential decay sample rate independent we solve the following
+   * for sampleRateAdjust:
+   * (rate * sampleRateAdjust)^(sampleRate - 1) = 1/200
+   *
+   * This is based on the generic solution to a geometric series.
+   * Nn = (N0 * factor)^(n -1)
+   *
+   * This gives:
+   * sampleRateAdjust = (200^(-1/(rate * sampleRate -1)))/rate
+   *
+   * So finally when we do the calcuation we do
+   * n1 = n0 * rate * sampleRateAdjust
+   *
+   * Which gives n1 = n0 * adjustedRate
+   *
+   * where adjustedRate = rate * (200^(-1/(rate * sampleRate -1)))/rate
+   *                    = 200^(-1/(rate * sampleRate -1))
+   */
+
+  return pow(200, -1 / (rate * sampleRate - 1));
 }

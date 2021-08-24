@@ -34,6 +34,7 @@ struct SineWaveVoice : public juce::SynthesiserVoice {
   void pitchWheelMoved(int) override{};
   void controllerMoved(int, int) override{};
 
+  void setCurrentPlaybackSampleRate(double newRate) override;
   void renderNextBlock(juce::AudioSampleBuffer &outputBuffer, int startSample,
                        int numSamples) override;
 

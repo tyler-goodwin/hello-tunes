@@ -27,6 +27,11 @@ void SineWaveVoice::stopNote(float /*velocity*/, bool allowTailOff) {
   }
 }
 
+void SineWaveVoice::setCurrentPlaybackSampleRate(double newRate) {
+  juce::SynthesiserVoice::setCurrentPlaybackSampleRate(newRate);
+  envelope.setSampleRate(newRate);
+}
+
 void SineWaveVoice::renderNextBlock(juce::AudioSampleBuffer &outputBuffer,
                                     int startSample, int numSamples) {
   if (angleDelta == 0.0)
